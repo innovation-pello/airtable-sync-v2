@@ -14,14 +14,20 @@ app.get("/api/hello", (req, res) => {
 
 // Serve frontend files in production
 if (process.env.NODE_ENV === "production") {
+  // Serve static files
   app.use(express.static(path.resolve(__dirname, "../frontend/dist")));
+
+  // Catch-all route for frontend
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
+    if (req.path.startsWith("/api")) {
+      // Avoid overriding API routes
+      res.status(404).json({ error: "API route not found" });
+    } else {
+      // Serve the frontend
+      res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
+    }
   });
 }
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running at http://127.0.0.1:${PORT}`);
-});
+// Export the app as a Vercel-compatible handler
+export default app;
